@@ -24,8 +24,10 @@ void Manager::queueProcess() {
             // Tiempo de respuesta = contador global - tiempo de llegada
             readyProcesses[0].setTRes(globalCounter - readyProcesses[0].getTLL());
         }
-        if (readyProcesses[0].getId() != 0)
+        if (readyProcesses[0].getId() != 0){
             workingProcess = readyProcesses[0];
+            updateFrames(workingProcess, NEED_TO_UPDATE);
+        }
     }
     else
         return;
@@ -38,7 +40,7 @@ void Manager::doneProcess() {
         workingProcess.setTF(globalCounter);
         workingProcess.setTRet(workingProcess.getTF() - workingProcess.getTLL());
         workingProcess.setTE(workingProcess.getTRet() - workingProcess.getTT());
-        updateFrames(workingProcess, true);
+        updateFrames(workingProcess, REMOVE);
         doneProcesses.push_back(workingProcess);
         workingProcess.setId(0);
         workingProcess.setTR(1);
@@ -64,6 +66,8 @@ void Manager::selectState(char character) {
                 workingProcess.setQuantum(quantumLength);
                 workingProcess.setTTB(5);
                 blockedProcesses.push_back(workingProcess);
+                workingProcess.setState(3);
+                updateFrames(workingProcess, NEED_TO_UPDATE);
                 workingProcess.setId(0);
                 workingProcess.setTR(1);
                 break;
@@ -75,18 +79,17 @@ void Manager::selectState(char character) {
                 queueProcess(); 
             }
             break;
-        case 'p': // pausa
+        case 'p': case 'a': // tabla de paginas y pausa
             // levanta la bandera de pausa
             pause = true;
             // limpia la pantalla si no se esta mostrando los bcps
-            if(!showBCP && !showFrames)
+            if(!showBCP)
                 CLEAR; 
             break;
         case 'c': // continuar
             // puede ser usado después de una 'b' o una 'p'
             pause = false;
             showBCP = false;
-            showFrames = false;
             CLEAR; 
             break;
         case 'n': // nuevo
@@ -101,13 +104,6 @@ void Manager::selectState(char character) {
             // levanta la bandera de pausa
             pause = true;
             break;
-        case 'a': // tabla de paginas
-            // levanta la bandera para mostrar la tabla de paginas
-            if(!pause)
-                showFrames = true;
-            // levanta la bandera de pausa
-            pause = true;
-            break;
     }
 }
 
@@ -117,6 +113,8 @@ void Manager::updateBlocked() {
     for (size_t i(0); i<blockedProcesses.size(); i++) {
         if (blockedProcesses[i].getTTB() == 1) {
             blockedProcesses[i].setTTB(0);
+            blockedProcesses[i].setState(0);
+            updateFrames(blockedProcesses[i], NEED_TO_UPDATE);
             readyProcesses.push_back(blockedProcesses[i]);
             band = true;
         }
@@ -135,16 +133,15 @@ void Manager::printData() {
             CLEAR;
             globalCounter++;
         }
-        if (!showBCP && !showFrames) {
+        if (!showBCP) {
             printInProgress();
             printQueued();
             printBlocked();
             printFinished();
-        }
-        else if (showBCP)
-            printBCP();
-        else
             printPageTable();
+        }
+        else
+            printBCP();
         if (!pause) {
             updateBlocked();
             workingProcess.setTT(workingProcess.getTT()+1);
@@ -156,8 +153,10 @@ void Manager::printData() {
             }
             if (workingProcess.getQuantum() == 0){
                 workingProcess.setQuantum(quantumLength);
-                if (workingProcess.getId() != 0)
+                if (workingProcess.getId() != 0){
                     readyProcesses.push_back(workingProcess);
+                    updateFrames(workingProcess, NEED_TO_UPDATE);
+                }
                 queueProcess();
             }
         }
@@ -169,40 +168,32 @@ void Manager::printData() {
         printInProgress();
         printBlocked();
         printFinished();
+        printPageTable();
 }
 
 void Manager::printPageTable() {
     int colPos = 1; 
-    CLEAR;
-    GOTO_XY(ON_HOLD_X_POS, colPos++);
-    std::cout << "Entrada: " << state;
-    GOTO_XY(ON_HOLD_X_POS, colPos++);
+    GOTO_XY(STATE_POS+26, colPos++);
     std::cout << "Tabla de paginas";
-    GOTO_XY(ON_HOLD_X_POS, colPos);
+    GOTO_XY(STATE_POS+14, colPos);
     std::cout << "Marco";
-    GOTO_XY(ON_HOLD_X_POS+9, colPos);
+    GOTO_XY(STATE_POS+23, colPos);
     std::cout << "espacio ocupado";
-    GOTO_XY(ON_HOLD_X_POS+28, colPos++);
+    GOTO_XY(STATE_POS+42, colPos++);
     std::cout << "quien lo ocupa";
+    GOTO_XY(STATE_POS+60, colPos++);
+    std::cout << "estado";
     for (int i(0); i < MAX_MEM_SIZE/4; i++){
-        GOTO_XY(ON_HOLD_X_POS+3, colPos);
+        GOTO_XY(STATE_POS+17, colPos);
         std::cout << i;
-        GOTO_XY(ON_HOLD_X_POS+15, colPos);
+        GOTO_XY(STATE_POS+29, colPos);
         std::cout << frames[i].getOccupied() << "/4";
-        GOTO_XY(ON_HOLD_X_POS+33, colPos++); 
-        std::cout << frames[i].getId(); 
+        GOTO_XY(STATE_POS+47, colPos); 
+        std::cout << frames[i].getId();
+        GOTO_XY(STATE_POS+63, colPos++); 
+        std::cout << frames[i].getState();
     }
 
-    // esperamos a que el usuario presione la tecla 'c' para continuar
-    char c = ' ';
-    do{
-        GOTO_XY(ON_HOLD_X_POS, 1);
-        std::cout << "Entrada: " << state;
-        if (KBHIT()){   
-            c = GETCH();
-            selectState(c);
-        }
-    }while(c != 'c');
 }
 
 // lote en espera
@@ -417,24 +408,33 @@ void Manager::createNewProcess() {
     }
 }
 
-void Manager::updateFrames(Process &proc, bool remove) {
+void Manager::updateFrames(Process &proc, int band) {
     int auxSize = proc.getWeight();
     int ammount = 0;
+    std::string state = "";
+    if (proc.getState() == 0)
+        state = "Listo";
+    else if (proc.getState() == 2)
+        state = "Ejecucion";
+    else
+        state = "Bloqueado";
     // si de debe remover, entonces establece los marcos como libres
-    if (remove){
+    if (band == REMOVE){
         for (int i(0); i < MAX_MEM_SIZE/4; i++)
             if (frames[i].getId() == std::to_string(proc.getId()))
                 frames[i] = Page();
     }
     else{
         for (int i(0); i < MAX_MEM_SIZE/4; i++)
-            if (frames[i].getId() == "Libre") {
+            if (frames[i].getId() == "Libre" && band == IS_FREE) {
                 ammount = auxSize-4 >= 0? 4: auxSize;
-                frames[i] = Page(std::to_string(proc.getId()), ammount);
+                frames[i] = Page(std::to_string(proc.getId()), ammount, state);
                 auxSize -= 4;
                 if (auxSize <= 0)
                     break;
             }
+            else if (frames[i].getId() == std::to_string(proc.getId()) && band == NEED_TO_UPDATE)
+                frames[i].setState(state);  
     }
 }
 

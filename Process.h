@@ -25,6 +25,7 @@ class Process{
         bool response; // bandera para obtener el tiempo de respuesta
         short quantum;
         short weight; // peso del proceso
+        short state;
 
     public:
         Process() { 
@@ -33,6 +34,7 @@ class Process{
             ready = false;
             response = false;
             quantum = 0;
+            state = 0;
         }
         ~Process() {}
 
@@ -54,6 +56,7 @@ class Process{
         void setResponse(bool value);
         void setQuantum(short value);
         void setWeight(short value);
+        void setState(short value);
         
         // getters
         const std::string getOperation() const;
@@ -74,6 +77,7 @@ class Process{
         const bool getResponse() const;
         const short getQuantum() const;
         const short getWeight() const;
+        const short getState() const;
 
         // sobrecarga de operador
         const Process& operator=(const Process &other) {
@@ -94,6 +98,7 @@ class Process{
             this->response = other.response;
             this->quantum = other.quantum;
             this->weight = other.weight;
+            this->state = other.state;
             return *this;
         }
 };

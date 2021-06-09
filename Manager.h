@@ -9,6 +9,12 @@
 #include <stdlib.h>
 #include "Page.h"
 
+enum State{
+    IS_FREE,
+    NEED_TO_UPDATE,
+    REMOVE
+};
+
 class Manager {
     private:
         static const int ON_HOLD_X_POS = 0;
@@ -35,7 +41,6 @@ class Manager {
         char state;
         bool pause;
         bool showBCP;
-        bool showFrames;
         int uniqueKey;
         int quantumLength;
         int currentMemSize;
@@ -55,14 +60,13 @@ class Manager {
         void printBCP();
         void printPageTable();
         bool canFit(Process &proc);
-        void updateFrames(Process &proc, bool remove = false);
+        void updateFrames(Process &proc, int band = IS_FREE);
     public:
         Manager() { 
             quantumLength = 0;
             totalProcess = 0;
             pause = false;
             showBCP = false;
-            showFrames = false;
             state = ' ';
             globalCounter = 0;
             uniqueKey = 1;
@@ -73,7 +77,7 @@ class Manager {
                 if (i < (MAX_MEM_SIZE/4) - 3)
                     frames[i] = Page();
                 else
-                    frames[i] = Page("OS", 4);
+                    frames[i] = Page("OS", 4, "");
             }
         }
         ~Manager() {}

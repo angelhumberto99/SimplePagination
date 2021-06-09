@@ -87,6 +87,8 @@ void Process::setQuantum(short value) { quantum = value; }
 
 void Process::setWeight(short value) { weight = value; }
 
+void Process::setState(short value) {state = value; }
+
 // getters
 const char Process::getOperationSymbol() const { return operationSymbol; }
 
@@ -138,3 +140,5 @@ const std::string Process::getResult() const {
 const short Process::getQuantum() const { return quantum; }
 
 const short Process::getWeight() const { return weight; }
+
+const short Process::getState() const { return state; }
