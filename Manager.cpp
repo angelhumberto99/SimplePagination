@@ -177,7 +177,7 @@ void Manager::printPageTable() {
     GOTO_XY(ON_HOLD_X_POS, colPos++);
     std::cout << "Entrada: " << state;
     GOTO_XY(ON_HOLD_X_POS, colPos++);
-    std::cout << "Tabla de procesos (BCP)";
+    std::cout << "Tabla de paginas";
     GOTO_XY(ON_HOLD_X_POS, colPos);
     std::cout << "Marco";
     GOTO_XY(ON_HOLD_X_POS+9, colPos);
@@ -223,6 +223,11 @@ void Manager::printQueued() {
     std::cout << "Entrada: " << state;
     GOTO_XY(ON_HOLD_X_POS, 2);
     std::cout << "Quantum: " << quantumLength;
+    if (!newProcesses.empty()){
+        GOTO_XY(QUEUED_X_POS-10, 2);
+        std::cout << "ID: " << newProcesses[0].getId() 
+        << " | Peso: " << newProcesses[0].getWeight();
+    }
 
     // mostramos los procesos en la cola de LISTOS
     GOTO_XY(ON_HOLD_X_POS, 4);
@@ -266,6 +271,8 @@ void Manager::printInProgress() {
     std::cout << "TR: " << workingProcess.getTR();
     GOTO_XY(QUEUED_X_POS, 11);
     std::cout << "QR: " << workingProcess.getQuantum();
+    GOTO_XY(QUEUED_X_POS, 12);
+    std::cout << "Peso: " << workingProcess.getWeight();
 }
 
 // procesos finalizados
@@ -290,7 +297,7 @@ void Manager::printFinished() {
 }
 
 void Manager::printBlocked() {
-    int pos = 13;
+    int pos = 14;
     GOTO_XY(QUEUED_X_POS, pos);
     std::cout << "Procesos bloqueados";
     if (blockedProcesses.empty()) {
