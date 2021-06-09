@@ -77,7 +77,7 @@ class Manager {
                 if (i < (MAX_MEM_SIZE/4) - 3)
                     frames[i] = Page();
                 else
-                    frames[i] = Page("OS", 4, "");
+                    frames[i] = Page("OS", 4, "Reservado");
             }
         }
         ~Manager() {}

@@ -10,7 +10,7 @@ class Page {
         Page() {
             id = "Libre";
             occupied = 0;
-            state = "";
+            state = "~";
         }
 
         Page(std::string _id, int size, std::string _state) {

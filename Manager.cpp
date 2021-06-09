@@ -26,6 +26,7 @@ void Manager::queueProcess() {
         }
         if (readyProcesses[0].getId() != 0){
             workingProcess = readyProcesses[0];
+            workingProcess.setState(1);
             updateFrames(workingProcess, NEED_TO_UPDATE);
         }
     }
@@ -66,7 +67,7 @@ void Manager::selectState(char character) {
                 workingProcess.setQuantum(quantumLength);
                 workingProcess.setTTB(5);
                 blockedProcesses.push_back(workingProcess);
-                workingProcess.setState(3);
+                workingProcess.setState(2);
                 updateFrames(workingProcess, NEED_TO_UPDATE);
                 workingProcess.setId(0);
                 workingProcess.setTR(1);
@@ -154,8 +155,9 @@ void Manager::printData() {
             if (workingProcess.getQuantum() == 0){
                 workingProcess.setQuantum(quantumLength);
                 if (workingProcess.getId() != 0){
-                    readyProcesses.push_back(workingProcess);
+                    workingProcess.setState(0);
                     updateFrames(workingProcess, NEED_TO_UPDATE);
+                    readyProcesses.push_back(workingProcess);
                 }
                 queueProcess();
             }
@@ -172,17 +174,19 @@ void Manager::printData() {
 }
 
 void Manager::printPageTable() {
-    int colPos = 1; 
-    GOTO_XY(STATE_POS+26, colPos++);
+    int colPos = 3; 
+    GOTO_XY(STATE_POS+31, colPos++);
     std::cout << "Tabla de paginas";
     GOTO_XY(STATE_POS+14, colPos);
     std::cout << "Marco";
     GOTO_XY(STATE_POS+23, colPos);
     std::cout << "espacio ocupado";
-    GOTO_XY(STATE_POS+42, colPos++);
+    GOTO_XY(STATE_POS+42, colPos);
     std::cout << "quien lo ocupa";
     GOTO_XY(STATE_POS+60, colPos++);
     std::cout << "estado";
+    GOTO_XY(STATE_POS+14, colPos++);
+    std::cout << ".-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-";
     for (int i(0); i < MAX_MEM_SIZE/4; i++){
         GOTO_XY(STATE_POS+17, colPos);
         std::cout << i;
@@ -190,7 +194,7 @@ void Manager::printPageTable() {
         std::cout << frames[i].getOccupied() << "/4";
         GOTO_XY(STATE_POS+47, colPos); 
         std::cout << frames[i].getId();
-        GOTO_XY(STATE_POS+63, colPos++); 
+        GOTO_XY(STATE_POS+60, colPos++); 
         std::cout << frames[i].getState();
     }
 
@@ -396,7 +400,7 @@ void Manager::createNewProcess() {
     workingProcess.getId() != 0? procInMem++:procInMem;
 
     // si hay menos de 5 procesos en memoria, podemos meterlos directamente a Listos
-    if (procInMem < 5 && canFit(auxProcess)) {
+    if (canFit(auxProcess)) {
         auxProcess.setTLL(globalCounter); 
         auxProcess.setReady(true);
         updateFrames(auxProcess);
@@ -414,7 +418,7 @@ void Manager::updateFrames(Process &proc, int band) {
     std::string state = "";
     if (proc.getState() == 0)
         state = "Listo";
-    else if (proc.getState() == 2)
+    else if (proc.getState() == 1)
         state = "Ejecucion";
     else
         state = "Bloqueado";
