@@ -426,13 +426,13 @@ void Manager::updateFrames(Process &proc, int band) {
     if (band == REMOVE){
         for (int i(0); i < MAX_MEM_SIZE/4; i++)
             if (frames[i].getId() == std::to_string(proc.getId()))
-                frames[i] = Page();
+                frames[i] = Frame();
     }
     else{
         for (int i(0); i < MAX_MEM_SIZE/4; i++)
             if (frames[i].getId() == "Libre" && band == IS_FREE) {
                 ammount = auxSize-4 >= 0? 4: auxSize;
-                frames[i] = Page(std::to_string(proc.getId()), ammount, state);
+                frames[i] = Frame(std::to_string(proc.getId()), ammount, state);
                 auxSize -= 4;
                 if (auxSize <= 0)
                     break;

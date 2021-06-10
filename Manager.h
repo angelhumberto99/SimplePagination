@@ -7,7 +7,7 @@
 #include <vector>
 #include <time.h>
 #include <stdlib.h>
-#include "Page.h"
+#include "Frame.h"
 
 enum State{
     IS_FREE,
@@ -34,7 +34,7 @@ class Manager {
         // procesos en el estado de FINALIZADOS
         std::vector<Process> doneProcesses;
     
-        Page frames[(MAX_MEM_SIZE/4)];
+        Frame frames[(MAX_MEM_SIZE/4)];
 
         int globalCounter;
         int totalProcess;
@@ -75,9 +75,9 @@ class Manager {
             srand (time(NULL));
             for (int i(0); i < MAX_MEM_SIZE/4; i++) {
                 if (i < (MAX_MEM_SIZE/4) - 3)
-                    frames[i] = Page();
+                    frames[i] = Frame();
                 else
-                    frames[i] = Page("OS", 4, "Reservado");
+                    frames[i] = Frame("OS", 4, "Reservado");
             }
         }
         ~Manager() {}

@@ -1,19 +1,19 @@
-#ifndef PAGE_H
-#define PAGE_H
+#ifndef FRAME_H
+#define FRAME_H
 
-class Page {
+class Frame {
     private:
         std::string id;
         int occupied;
         std::string state;
     public:
-        Page() {
+        Frame() {
             id = "Libre";
             occupied = 0;
             state = "~";
         }
 
-        Page(std::string _id, int size, std::string _state) {
+        Frame(std::string _id, int size, std::string _state) {
             id = _id;
             occupied = size;
             state = _state;
@@ -28,4 +28,4 @@ class Page {
         const std::string getState() const { return state; }
 };
 
-#endif // PAGE_H
+#endif // FRAME_H
